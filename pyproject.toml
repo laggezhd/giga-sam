@@ -19,3 +19,9 @@ dependencies = [
 
 [tool.uv.sources]
 sam-2 = { path = "dist/sam_2-1.0-py3-none-any.whl" }
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.1.0",
+    "pip>=25.3",
+]

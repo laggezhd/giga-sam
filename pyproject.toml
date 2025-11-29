@@ -1,0 +1,21 @@
+[project]
+name = "giga-sam"
+version = "0.1.0"
+description = "A segmentation model"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "numpy>=1.24.4",
+    "tqdm>=4.66.1",
+    "hydra-core>=1.3.2",
+    "iopath>=0.1.10",
+    "pillow>=9.4.0",
+    "pycocoevalcap>=1.2",
+    "matplotlib>=3.10.7",
+    "sam-2",
+]
+
+[tool.uv.sources]
+sam-2 = { path = "dist/sam_2-1.0-py3-none-any.whl" }

@@ -15,6 +15,7 @@ dependencies = [
     "pycocoevalcap>=1.2",
     "matplotlib>=3.10.7",
     "sam-2",
+    "wandb>=0.23.1",
 ]
 
 [tool.uv.sources]

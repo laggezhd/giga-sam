@@ -14,12 +14,10 @@ dependencies = [
     "pillow>=9.4.0",
     "pycocoevalcap>=1.2",
     "matplotlib>=3.10.7",
-    "sam-2",
     "wandb>=0.23.1",
+    "torchinfo>=1.8.0",
+    "torchmetrics>=1.8.2",
 ]
-
-[tool.uv.sources]
-sam-2 = { path = "dist/sam_2-1.0-py3-none-any.whl" }
 
 [dependency-groups]
 dev = [

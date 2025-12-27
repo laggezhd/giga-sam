@@ -24,3 +24,7 @@ dev = [
     "ipykernel>=7.1.0",
     "pip>=25.3",
 ]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

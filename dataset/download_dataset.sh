@@ -1,3 +1,5 @@
+#!/bin/bash
+
 CURL="curl -s -L -O"
 
 if [ ! -d "train2017" ] || [ ! -d "val2017" ] || [ ! -d "annotations" ]; then

@@ -1,0 +1,1 @@
+python train.py --deterministic --epochs 2 --optimizer Adam --lr 0.001 --model minimalsam --use-bias --dataset minimalsam_dataset --device MAX78000 --batch-size 32 --qat-policy policies/qat_policy_camvid.yaml --compress policies/schedule.yaml validation-split 0 "$@"

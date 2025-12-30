@@ -5,11 +5,6 @@ from torchvision.ops import SqueezeExcitation
 
 
 class InvertedResidual(nn.Module):
-    """
-    MobileNetV2/V3 style block: Expand -> Depthwise -> Project
-
-    We use ReLU6 activations for better quantization compatibility.
-    """
     def __init__(self, in_c, out_c, stride=1, expand_ratio=4, use_se=True):
         super(InvertedResidual, self).__init__()
         hidden_c = int(round(in_c * expand_ratio))

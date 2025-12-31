@@ -115,7 +115,7 @@ class MinimalSamDataset(Dataset):
         cropped_image, cropped_mask = self._crop(image, mask)
 
         image_tensor = self.transform(cropped_image)
-        mask_tensor = torch.tensor(np.array(cropped_mask), dtype=torch.long)
+        mask_tensor = np.array(cropped_mask).astype(np.int64) # why unsqueeze??
 
         return image_tensor, mask_tensor
     

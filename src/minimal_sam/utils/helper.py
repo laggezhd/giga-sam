@@ -43,7 +43,11 @@ def compute_batch_counts(logits: torch.Tensor, targets: torch.Tensor, threshold=
     return intersection, union
       
 
-def measure_global_iou(model, dataloader, device, threshold=0.5):
+def measure_global_iou(model, dataloader=None, device='cuda', threshold=0.5):
+    if dataloader is None:
+        print("No dataloader provided for global IoU measurement.")
+        return None
+    
     total_intersection = 0.0
     total_union = 0.0
 
@@ -126,12 +130,12 @@ def measure_inference_time(model, input_size=(3, 96, 96), device='cuda', iterati
     return t_avg, t_std, t_p99
 
 
-def benchmark(model, dataloader, device, input_size=(3, 96, 96), iterations=500):
+def benchmark(model, dataloader=None, device='cpu', input_size=(1, 3, 96, 96), iterations=500):
     print("=== Benchmark Summary ===")
-    macs, params = measure_macs_params(model, input_size=input_size)
+    macs, params = measure_macs_params(model, input_size=input_size[1:])
     t_avg, t_std, t_p99 = measure_inference_time(model, input_size=input_size, device=device, iterations=iterations)
     global_iou = measure_global_iou(model, dataloader, device)
-    print("=========================")
+    print("=========================\n")
 
     return {
         "macs": macs,

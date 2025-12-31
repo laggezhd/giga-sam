@@ -15,12 +15,12 @@ class InvertedResidual(nn.Module):
         if expand_ratio != 1:
             layers.append(nn.Conv2d(in_c, hidden_c, kernel_size=1, bias=False))
             layers.append(nn.BatchNorm2d(hidden_c))
-            layers.append(nn.Hardswish(inplace=True))
+            layers.append(nn.ReLU6(inplace=True))
 
         # 2. Depthwise Convolution
         layers.append(nn.Conv2d(hidden_c, hidden_c, kernel_size=3, stride=stride, padding=1, groups=hidden_c, bias=False))
         layers.append(nn.BatchNorm2d(hidden_c))
-        layers.append(nn.Hardswish(inplace=True))
+        layers.append(nn.ReLU6(inplace=True))
 
         # 3. Squeeze and Excite (Optional: reduction ratio 16)
         if use_se:
@@ -45,25 +45,28 @@ class DepthWiseSeparableConv2d(nn.Module):
         self.DWSconv = nn.Sequential(
             nn.Conv2d(in_channels, in_channels, kernel_size=3, groups=in_channels, padding=1, bias=False), # Depthwise
             nn.BatchNorm2d(in_channels),
-            nn.Hardswish(inplace=True),
+            nn.ReLU6(inplace=True),
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False), # Pointwise
             nn.BatchNorm2d(out_channels),
-            nn.Hardswish(inplace=True)
+            nn.ReLU6(inplace=True)
         )
     
     def forward(self, x):
         return self.DWSconv(x)
 
 
-class BilinearUpsample(nn.Module):
+class BilinearReduceUpsample(nn.Module):
+    """
+    This block upsamples the input by a factor of 2 using bilinear interpolation.
+    It then reduces the number of channels using a 1x1 convolution.
+
+    Input:  (B, in_channels, H, W)
+    Output: (B, out_channels, 2*H, 2*W)
+    """
     def __init__(self, in_channels, out_channels, scale_factor=2):
-        super(BilinearUpsample, self).__init__()
+        super(BilinearReduceUpsample, self).__init__()
         self.up = nn.Upsample(scale_factor=scale_factor, mode='bilinear', align_corners=False)
-        self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.Hardswish(inplace=True)
-        )
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
 
     def forward(self, x):
         return self.conv(self.up(x))
@@ -73,14 +76,12 @@ class MicroSAM(nn.Module):
     def __init__(self, in_channels=3, num_classes=1):
         super().__init__()
 
-        # Initial stem: 96x96 -> 48x48 (reduce size early to save computations)
+        # Initial stem: 96x96 -> 48x48
         self.stem = nn.Sequential(
-            # First conv: reduce resolution
+            # conv: reduce size early with stride=2 to save computations!
             nn.Conv2d(in_channels, 16, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(16),
-            nn.Hardswish(inplace=True),
-            # Second conv: feature extraction
-            DepthWiseSeparableConv2d(16, 16)
+            nn.ReLU6(inplace=True)
         )
 
         # Encoder Stages
@@ -105,20 +106,19 @@ class MicroSAM(nn.Module):
 
         # Decoder Stages with Reduce and Skip Connections
         # Up 1: 6x6 -> 12x12
-        self.up1 = BilinearUpsample(128, 64, scale_factor=2)
+        self.up1 = BilinearReduceUpsample(128, 64, scale_factor=2)
         self.dec1 = DepthWiseSeparableConv2d(64+64, 64)  
 
         # Up 2: 12x12 -> 24x24
-        self.up2 = BilinearUpsample(64, 32, scale_factor=2)
+        self.up2 = BilinearReduceUpsample(64, 32, scale_factor=2)
         self.dec2 = DepthWiseSeparableConv2d(32+32, 32)
         
         # Up 3: 24x24 -> 48x48
-        self.up3 = BilinearUpsample(32, 16, scale_factor=2)
+        self.up3 = BilinearReduceUpsample(32, 16, scale_factor=2)
         self.dec3 = DepthWiseSeparableConv2d(16+16, 16)
 
         # Up 4: 48x48 -> 96x96 (smooth final upsample)
-        self.up4 = BilinearUpsample(16, 16, scale_factor=2)
-
+        self.up4 = BilinearReduceUpsample(16, 16, scale_factor=2)
         # Head
         self.head = nn.Conv2d(16, num_classes, 1)
 
@@ -129,7 +129,7 @@ class MicroSAM(nn.Module):
         x2 = self.enc2(x1)                          # (B,32,24,24)
         x3 = self.enc3(x2)                          # (B,64,12,12)
         x4 = self.enc4(x3)                          # (B,128,6,6)
-        
+
         # Decoder with Skip Connections
         d1 = self.up1(x4)                           # (B,64,12,12)
         d1 = self.dec1(torch.cat([d1, x3], dim=1))  # (B,64,12,12) --> C: 64+64
@@ -147,5 +147,8 @@ class MicroSAM(nn.Module):
 
 if __name__ == "__main__":
     model = MicroSAM()
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"Total parameters: {total_params}") 
+    input_tensor = torch.randn(1, 3, 96, 96)
+    output = model(input_tensor)
+
+    params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total trainable parameters: {params / 1e3:.1f}k")

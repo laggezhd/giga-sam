@@ -13,7 +13,7 @@ if [ ! -d "train2017" ] || [ ! -d "val2017" ] || [ ! -d "annotations" ]; then
     unzip train2017.zip -d . > /dev/null && rm train2017.zip &
     wait
     unzip annotations_trainval2017.zip && rm annotations_trainval2017.zip 
-    unzip lvis_v1_val.json.zip && rm lvis_v1_val.json.zip 
+    unzip lvis_v1_val.json.zip -d ./annotations/ && rm lvis_v1_val.json.zip 
     echo "COCO 2017 dataset downloaded and extracted."
 else
     echo "COCO 2017 dataset already exists. Skipping download."

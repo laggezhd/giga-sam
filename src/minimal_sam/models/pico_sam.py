@@ -53,3 +53,9 @@ class PicoSAM(nn.Module):
         upsample4 = self.up4(upsample3) + self.skip_conn1(feat1)
 
         return self.output_head(upsample4)
+    
+
+if __name__ == "__main__":
+    model = PicoSAM()
+    params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total trainable parameters: {params / 1e3:.1f}k")

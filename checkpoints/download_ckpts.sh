@@ -43,6 +43,12 @@ sam2p1_hiera_s_url="${SAM2p1_BASE_URL}/sam2.1_hiera_small.pt"
 sam2p1_hiera_b_plus_url="${SAM2p1_BASE_URL}/sam2.1_hiera_base_plus.pt"
 sam2p1_hiera_l_url="${SAM2p1_BASE_URL}/sam2.1_hiera_large.pt"
 
+# check if checkpoints already exist
+if [ -f "sam2.1_hiera_tiny.pt" ] && [ -f "sam2.1_hiera_small.pt" ] && [ -f "sam2.1_hiera_base_plus.pt" ] && [ -f "sam2.1_hiera_large.pt" ]; then
+    echo "All checkpoints already exist. Skipping download."
+    exit 0
+fi
+
 # SAM 2.1 checkpoints
 echo "Downloading sam2.1_hiera_tiny.pt checkpoint..."
 $CMD $sam2p1_hiera_t_url || { echo "Failed to download checkpoint from $sam2p1_hiera_t_url"; exit 1; }

@@ -185,6 +185,7 @@ datasets = [
         'name': 'minimalsam_dataset',
         'input': (3, 88, 88),
         'output': (0, 1), # binary segmentation
+        'weight': (0.15, 1),
         'loader': minimalsam_get_datasets,
     }
 ]

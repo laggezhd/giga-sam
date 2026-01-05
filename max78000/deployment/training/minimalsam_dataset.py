@@ -157,8 +157,8 @@ def minimalsam_get_datasets(data, load_train=False, load_test=False):
     if load_train:
         annotation_file = os.path.join(data_dir, "annotations/instances_train2017.json")
         img_dir = os.path.join(data_dir, "train2017")
-        img_size = 96
-        filtered_annotation_file = os.path.join(data_dir, "annotations/filtered_anns_96x96_train2017_coco.json")
+        img_size = 88
+        filtered_annotation_file = os.path.join(data_dir, "annotations/filtered_anns_88x88_train2017_coco.json")
         train_dataset = MinimalSamDataset(annotation_file, img_dir, img_size, transform, filtered_annotation_file=filtered_annotation_file)
 
     else:
@@ -167,8 +167,8 @@ def minimalsam_get_datasets(data, load_train=False, load_test=False):
     if load_test:
         annotation_file = os.path.join(data_dir, "annotations/instances_val2017.json")
         img_dir = os.path.join(data_dir, "val2017")
-        img_size = 96
-        filtered_annotation_file = os.path.join(data_dir, "annotations/filtered_anns_96x96_val2017_coco.json")
+        img_size = 88
+        filtered_annotation_file = os.path.join(data_dir, "annotations/filtered_anns_88x88_val2017_coco.json")
         test_dataset = MinimalSamDataset(annotation_file, img_dir, img_size, transform, filtered_annotation_file=filtered_annotation_file)
 
     else:
@@ -183,8 +183,9 @@ Dataset description
 datasets = [
     {
         'name': 'minimalsam_dataset',
-        'input': (3, 96, 96),
+        'input': (3, 88, 88),
         'output': (0, 1), # binary segmentation
+        # 'weight': (0.15, 1),
         'loader': minimalsam_get_datasets,
     }
 ]

@@ -28,31 +28,24 @@ class MinimalSam(nn.Module):
     ):
         super().__init__()
 
-        self.enc1 = ai8x.FusedConv2dBNReLU(num_channels, 8, 3, stride=1, padding=1,
+        self.prep0 = ai8x.FusedConv2dBNReLU(num_channels, 64, 1, stride=1, padding=0,
+                                            bias=bias, batchnorm='NoAffine', **kwargs)
+        self.prep1 = ai8x.FusedConv2dBNReLU(64, 64, 1, stride=1, padding=0,
+                                            bias=bias, batchnorm='NoAffine', **kwargs)
+        self.prep2 = ai8x.FusedConv2dBNReLU(64, 32, 1, stride=1, padding=0,
+                                            bias=bias, batchnorm='NoAffine', **kwargs)
+
+        self.enc1 = ai8x.FusedConv2dBNReLU(32, 8, 3, stride=1, padding=1,
                                            bias=bias, batchnorm='NoAffine', **kwargs)
         self.enc2 = ai8x.FusedMaxPoolConv2dBNReLU(8, 28, 3, stride=1, padding=1,
                                                   bias=bias, batchnorm='NoAffine', **kwargs)
         self.enc3 = ai8x.FusedMaxPoolConv2dBNReLU(28, 56, 3, stride=1, padding=1,
                                                   bias=bias, batchnorm='NoAffine', **kwargs)
 
-        self.bneck0 = ai8x.FusedMaxPoolConv2dBNReLU(56, 56, 3, stride=1, padding=1,
+        self.bneck = ai8x.FusedMaxPoolConv2dBNReLU(56, 112, 3, stride=1, padding=1,
                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck1 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck2 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck3 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck4 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck5 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
-        self.bneck6 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)        
-        self.bneck7 = ai8x.FusedConv2dBNReLU(56, 56, 3, stride=1, padding=1,
-                                                    bias=bias, batchnorm='NoAffine', **kwargs)
 
-        self.upconv3 = ai8x.ConvTranspose2d(56, 56, 3, stride=2, padding=1)
+        self.upconv3 = ai8x.ConvTranspose2d(112, 56, 3, stride=2, padding=1)
         self.dec3 = ai8x.FusedConv2dBNReLU(112, 56, 3, stride=1, padding=1,
                                            bias=bias, batchnorm='NoAffine', **kwargs)
 
@@ -61,43 +54,49 @@ class MinimalSam(nn.Module):
                                            bias=bias, batchnorm='NoAffine', **kwargs)
 
         self.upconv1 = ai8x.ConvTranspose2d(28, 8, 3, stride=2, padding=1)
-        self.dec1 = ai8x.FusedConv2dBNReLU(16, 64, 3, stride=1, padding=1,
+        self.dec1 = ai8x.FusedConv2dBNReLU(16, 48, 3, stride=1, padding=1,
                                            bias=bias, batchnorm='NoAffine', **kwargs)
 
-        self.dec0 = ai8x.FusedConv2dBNReLU(64, 32, 3, stride=1, padding=1,
+        self.dec0 = ai8x.FusedConv2dBNReLU(48, 64, 3, stride=1, padding=1,
                                            bias=bias, batchnorm='NoAffine', **kwargs)
 
-        self.conv = ai8x.FusedConv2dBN(32, num_classes, 1, stride=1, padding=0,
+        self.conv_p1 = ai8x.FusedConv2dBNReLU(64, 64, 1, stride=1, padding=0,
+                                              bias=bias, batchnorm='NoAffine', **kwargs)
+        self.conv_p2 = ai8x.FusedConv2dBNReLU(64, 64, 1, stride=1, padding=0,
+                                              bias=bias, batchnorm='NoAffine', **kwargs)
+        self.conv_p3 = ai8x.FusedConv2dBN(64, 64, 1, stride=1, padding=0,
+                                          bias=bias, batchnorm='NoAffine', **kwargs)
+
+        self.conv = ai8x.FusedConv2dBN(64, num_classes, 1, stride=1, padding=0,
                                        bias=bias, batchnorm='NoAffine', **kwargs)
 
     def forward(self, x):  # pylint: disable=arguments-differ
         """Forward prop"""
         # Run CNN
+        x = self.prep0(x)
+        x = self.prep1(x)
+        x = self.prep2(x)
 
         enc1 = self.enc1(x)                    # 8x(dim1)x(dim2)
-        enc2 = self.enc2(enc1)                 # 16x(dim1/2)x(dim2/2)
-        enc3 = self.enc3(enc2)                 # 32x(dim1/4)x(dim2/4)
+        enc2 = self.enc2(enc1)                 # 28x(dim1/2)x(dim2/2)
+        enc3 = self.enc3(enc2)                 # 56x(dim1/4)x(dim2/4)
 
-        bneck0 = self.bneck0(enc3)          # 64x(dim1/8)x(dim2/8)
-        bneck1 = self.bneck1(bneck0)
-        bneck2 = self.bneck1(bneck1)
-        bneck3 = self.bneck1(bneck2)
-        bneck4 = self.bneck1(bneck3)
-        bneck5 = self.bneck1(bneck4)
-        bneck6 = self.bneck1(bneck5)
-        bneck7 = self.bneck1(bneck6)
+        bottleneck = self.bneck(enc3)          # 112x(dim1/8)x(dim2/8)
 
-        dec3 = self.upconv3(bneck7)        # 32x(dim1/4)x(dim2/4)
-        dec3 = torch.cat((dec3, enc3), dim=1)  # 64x(dim1/4)x(dim2/4)
-        dec3 = self.dec3(dec3)                 # 32x(dim1/4)x(dim2/4)
-        dec2 = self.upconv2(dec3)              # 16x(dim1/2)x(dim2/2)
-        dec2 = torch.cat((dec2, enc2), dim=1)  # 32(dim1/2)x(dim2/2)
-        dec2 = self.dec2(dec2)                 # 16x(dim1/2)x(dim2/2)
+        dec3 = self.upconv3(bottleneck)        # 56x(dim1/4)x(dim2/4)
+        dec3 = torch.cat((dec3, enc3), dim=1)  # 112x(dim1/4)x(dim2/4)
+        dec3 = self.dec3(dec3)                 # 56x(dim1/4)x(dim2/4)
+        dec2 = self.upconv2(dec3)              # 28x(dim1/2)x(dim2/2)
+        dec2 = torch.cat((dec2, enc2), dim=1)  # 56(dim1/2)x(dim2/2)
+        dec2 = self.dec2(dec2)                 # 28x(dim1/2)x(dim2/2)
         dec1 = self.upconv1(dec2)              # 8x(dim1)x(dim2)
         dec1 = torch.cat((dec1, enc1), dim=1)  # 16x(dim1)x(dim2)
         dec1 = self.dec1(dec1)                 # 48x(dim1)x(dim2)
-
         dec0 = self.dec0(dec1)                 # 64x(dim1)x(dim2)
+
+        dec0 = self.conv_p1(dec0)
+        dec0 = self.conv_p2(dec0)
+        dec0 = self.conv_p3(dec0)
         dec0 = self.conv(dec0)                 # num_final_channelsx(dim1)x(dim2)
 
         return dec0

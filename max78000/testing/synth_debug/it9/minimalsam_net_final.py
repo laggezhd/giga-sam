@@ -22,7 +22,7 @@ class MinimalSam(nn.Module):
             self,
             num_classes=2,
             num_channels=3,
-            dimensions=(96, 96),  # pylint: disable=unused-argument
+            dimensions=(88, 88),  # pylint: disable=unused-argument
             bias=True,
             **kwargs
     ):
@@ -75,10 +75,10 @@ class MinimalSam(nn.Module):
         # Run CNN
 
         enc1 = self.enc1(x)                    # 8x(dim1)x(dim2)
-        enc2 = self.enc2(enc1)                 # 16x(dim1/2)x(dim2/2)
-        enc3 = self.enc3(enc2)                 # 32x(dim1/4)x(dim2/4)
+        enc2 = self.enc2(enc1)                 # 28x(dim1/2)x(dim2/2)
+        enc3 = self.enc3(enc2)                 # 56x(dim1/4)x(dim2/4)
 
-        bneck0 = self.bneck0(enc3)          # 64x(dim1/8)x(dim2/8)
+        bneck0 = self.bneck0(enc3)          # 56x(dim1/8)x(dim2/8)
         bneck1 = self.bneck1(bneck0)
         bneck2 = self.bneck1(bneck1)
         bneck3 = self.bneck1(bneck2)
@@ -87,17 +87,17 @@ class MinimalSam(nn.Module):
         bneck6 = self.bneck1(bneck5)
         bneck7 = self.bneck1(bneck6)
 
-        dec3 = self.upconv3(bneck7)        # 32x(dim1/4)x(dim2/4)
-        dec3 = torch.cat((dec3, enc3), dim=1)  # 64x(dim1/4)x(dim2/4)
-        dec3 = self.dec3(dec3)                 # 32x(dim1/4)x(dim2/4)
-        dec2 = self.upconv2(dec3)              # 16x(dim1/2)x(dim2/2)
-        dec2 = torch.cat((dec2, enc2), dim=1)  # 32(dim1/2)x(dim2/2)
-        dec2 = self.dec2(dec2)                 # 16x(dim1/2)x(dim2/2)
+        dec3 = self.upconv3(bneck7)        # 56x(dim1/4)x(dim2/4)
+        dec3 = torch.cat((dec3, enc3), dim=1)  # 112x(dim1/4)x(dim2/4)
+        dec3 = self.dec3(dec3)                 # 56x(dim1/4)x(dim2/4)
+        dec2 = self.upconv2(dec3)              # 28x(dim1/2)x(dim2/2)
+        dec2 = torch.cat((dec2, enc2), dim=1)  # 56x(dim1/2)x(dim2/2)
+        dec2 = self.dec2(dec2)                 # 28x(dim1/2)x(dim2/2)
         dec1 = self.upconv1(dec2)              # 8x(dim1)x(dim2)
         dec1 = torch.cat((dec1, enc1), dim=1)  # 16x(dim1)x(dim2)
         dec1 = self.dec1(dec1)                 # 48x(dim1)x(dim2)
 
-        dec0 = self.dec0(dec1)                 # 64x(dim1)x(dim2)
+        dec0 = self.dec0(dec1)                 # 32x(dim1)x(dim2)
         dec0 = self.conv(dec0)                 # num_final_channelsx(dim1)x(dim2)
 
         return dec0

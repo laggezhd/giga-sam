@@ -1,0 +1,189 @@
+---
+# HWC (little data) configuration for CamVid
+# UNet Model
+
+arch: minimalsam
+dataset: minimalsam_dataset_88
+
+layers:
+  # Layer 0: enc1
+  - out_offset: 0x0000
+    in_offset: 0x0700
+    processors: 0x0000000000000007
+    output_processors: 0xff00000000000000
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+    data_format: HWC
+  # Layer 1: enc2
+  - out_offset: 0x0000
+    processors: 0xff00000000000000
+    output_processors: 0x00fffffff0000000
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    max_pool: 2
+    pool_stride: 2
+    activate: ReLU
+  # Layer 2: enc3
+  - out_offset: 0x5000
+    processors: 0x00fffffff0000000
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    max_pool: 2
+    pool_stride: 2
+    activate: ReLU
+  # Layer 3: bneck0
+  - out_offset: 0x6000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    max_pool: 2
+    pool_stride: 2
+    activate: ReLU
+  # Layer 4: bneck1
+  - out_offset: 0x7000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 5: bneck2
+  - out_offset: 0x6000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 6: bneck3
+  - out_offset: 0x7000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 7: bneck4
+  - out_offset: 0x6000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 8: bneck5
+  - out_offset: 0x7000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 9: bneck6
+  - out_offset: 0x6000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 10: bneck7
+  - out_offset: 0x7000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 11: pt
+  - in_offset: 0x5000
+    out_offset: 0x4004
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 1x1
+    pad: 0
+    write_gap: 1
+    in_sequences: [2]
+    activate: None
+  # Layer 12: upconv3
+  - in_offset: 0x7000
+    out_offset: 0x4000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: convtranspose2d
+    kernel_size: 3x3
+    pad: 1
+    activate: None
+    write_gap: 1
+    in_sequences: [10]
+  # Layer 13: dec3
+  - out_offset: 0x2000
+    in_offset: 0x4000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x00ffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+    in_sequences: [12, 11]
+  # Layer 14: upconv2
+  - out_offset: 0x0000
+    in_offset: 0x2000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x000000000fffffff
+    operation: convtranspose2d
+    kernel_size: 3x3
+    pad: 1
+    activate: None
+  # Layer 15: dec2
+  - out_offset: 0x2000
+    in_offset: 0x0000
+    processors: 0x00ffffffffffffff
+    output_processors: 0x000000000fffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+    in_sequences: [14, 1]
+  # Layer 16: upconv1
+  - out_offset: 0x0000
+    processors: 0x000000000fffffff
+    output_processors: 0x00ff000000000000
+    operation: convtranspose2d
+    kernel_size: 3x3
+    pad: 1
+    activate: None
+  # Layer 17: dec1
+  - out_offset: 0x0700
+    in_offset: 0x0000
+    processors: 0xffff000000000000
+    output_processors: 0xffffffffffffffff
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+    in_sequences: [16, 0]
+  # Layer 18: dec0
+  - out_offset: 0x0550
+    processors: 0xffffffffffffffff
+    output_processors: 0xffffffff00000000
+    operation: conv2d
+    kernel_size: 3x3
+    pad: 1
+    activate: ReLU
+  # Layer 19: conv
+  - out_offset: 0x0000
+    processors: 0xffffffff00000000
+    output_processors: 0x0000000000000003
+    operation: conv2d
+    kernel_size: 1x1
+    pad: 0
+    activate: None

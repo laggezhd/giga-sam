@@ -1,7 +1,7 @@
 ###################################################################################################
 #
 # Dataset definition for ai8x-training
-# 96x96 images cropped from COCO dataset
+# 88x88 images cropped from COCO dataset
 # Cyril Scherrer, 2025
 #
 ###################################################################################################
@@ -115,7 +115,7 @@ class MinimalSamDataset(Dataset):
         cropped_image, cropped_mask = self._crop(image, mask)
 
         image_tensor = self.transform(cropped_image)
-        mask_tensor = np.array(cropped_mask).astype(np.int64) # why unsqueeze??
+        mask_tensor = np.array(cropped_mask).astype(np.int64)
 
         return image_tensor, mask_tensor
     

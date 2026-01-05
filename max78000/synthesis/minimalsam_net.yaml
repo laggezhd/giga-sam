@@ -1,5 +1,5 @@
 ---
-# HWC (little data) configuration for CamVid
+# HWC (little data) configuration for MinimalSam
 # UNet Model
 
 arch: minimalsam

@@ -1,5 +1,5 @@
 #!/bin/sh
-python quantize.py /home/cyril/git/giga-sam/outputs/4_1_deployable/epoch16_qat.tar /home/cyril/git/giga-sam/outputs/4_1_deployable/epoch16_qat_q8.tar --device MAX78000 -v
-python izer/add_fake_passthrough.py --input-checkpoint-path /home/cyril/git/giga-sam/outputs/4_1_deployable/epoch16_qat_q8.tar --output-checkpoint-path /home/cyril/git/giga-sam/outputs/4_1_deployable/epoch16_qat_q8_fakept.tar --layer-name pt --layer-depth 56 --layer-name-after-pt upconv3
+python quantize.py /home/cyril/git/giga-sam/outputs/5_1_final/epoch19_qat.tar /home/cyril/git/giga-sam/outputs/5_1_final/epoch19_qat_q8.tar --device MAX78000 -v
+python izer/add_fake_passthrough.py --input-checkpoint-path /home/cyril/git/giga-sam/outputs/5_1_final/epoch19_qat_q8.tar --output-checkpoint-path /home/cyril/git/giga-sam/outputs/5_1_final/epoch19_qat_q8_fakept.tar --layer-name pt --layer-depth 56 --layer-name-after-pt upconv3
 
 python ai8xize.py --test-dir synthed_net/ --prefix minimalsam --checkpoint-file trained_gigasam/minimalsam_ai8x_qat_nowd_88x88_epoch10_q8_fakept.pth.tar --config-file networks/minimalsam_net_88.yaml --sample-input ../ai8x-training/sample_minimalsam_dataset_88.npy --device MAX78000 --compact-data --mexpress --timer 0 --display-checkpoint --verbose --overwrite --overlap-data --mlator "$@"
